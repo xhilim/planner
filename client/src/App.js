@@ -6,19 +6,18 @@ import Calendar from "./pages/Calendar"
 import {getMonth} from './utility/getMonth'
 import React, {useState, useContext, useEffect} from 'react';
 import GlobalContext from './context/GlobalContext';
-import Week from './pages/Week';
 import Events from './pages/Events';
 import ShowE from './pages/Show'
 
 
-
+//routing frontendu
 function App(){
   const [currentMonth, setCurrentMonth ] = useState(getMonth())
   const {monthIndex}  = useContext(GlobalContext)
 
   useEffect(() => {
     setCurrentMonth(monthIndex)
-  }, [monthIndex]);
+  }, [monthIndex]); //pobieranie obecnego miesiąca
   return (
     <>
     <Routes>
@@ -26,7 +25,6 @@ function App(){
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
     <Route path="/calendar" element={<Calendar/>} />
-    <Route path="/week" element={<Week/>} />
     <Route path="/event" element={<Events/>} />
     <Route path="/show" element={<ShowE/>} />
     </Routes>

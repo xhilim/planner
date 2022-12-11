@@ -1,64 +1,90 @@
+/**server.js - serwer tworzący api które pozwalają na wykonywanie różnych operacji takie jak
+*tworzenie 
+*logowanie użytkownika
+*dodawanie i usuwanie wydarzeń
+*odczyt wydarzeń
+*/
+
 const express = require("express")
 const app = express()
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
-app.use(cors());
+app.use(cors()); //umożliwia połączenie między domenami (łączy frontend i backend)
 
-app.use(express.json());
+app.use(express.json()); //uruchomienie aplikacji - serwera
 
-const mongoUrl =  "mongodb+srv://user:adam123@cluster0.dfi875d.mongodb.net/?retryWrites=true&w=majority"
+const mongoUrl =  "mongodb+srv://user:adam123@cluster0.dfi875d.mongodb.net/?retryWrites=true&w=majority" //baza danych
 
-const JWT_SECRET = "123123123012405430"
+//łączenie się  z bazą danuch
 mongoose
 .connect(mongoUrl, {
     useNewUrlParser: true
 })
+//komunikat w przypdaku poprawnego połączenia
 .then (()=> {
     console.log("Connected to database");
-})
+})//komunikat w przypdaku błędu
 .catch((e)=> console.log(e));
-
+//pobranie schematu użytkownika
 require("./schemas/userDetails");
-
+//przypisanie użytkownika do zmiennej
 const User = mongoose.model("UserInfo");
-app.post("/register", async (req, res) => {
-  const { email,nick, password } = req.body;
 
+/**
+ * rejestracja użytkownika
+ * pobiera email, nick i hasło i tworzy w bazie danych nowego użytkownika
+ * @param  req - dane przesyłane z frontendu
+ * @param  res - odpowiedź 
+ */
+app.post("/register", async (req, res) => {
+  //przypisanie danych z frondtednu 
+    const { email,nick, password } = req.body;
+  //szyfrowanie hasła
   const encryptedPassword = await bcrypt.hash(password, 10);
   try {
+    //wyszukiwanie czy użytkownik o podanym mailu istnieje
     const oldUser = await User.findOne({ email });
-
+    //sprawdzanie czy email jest już wykorzystywany
     if (oldUser) {
       return res.json({ error: "User Exists" });
     }
+
+    //towrzenie nowego użytkownika
     await User.create({
       email,
       nick,
       password: encryptedPassword,
     });
+    //komunikat wysyłany jeżeli operacja zakończy się powodzeniem
     res.send({ status: "ok" });
   } catch (error) {
     res.send({ status: "error" });
   }
 });
 
-
+/**
+ * logowanie użytkownika
+ * pobiera email i hasło i sprawdza prawidłowość danych
+ * @param  req - dane przesyłane z frontendu
+ * @param  res - odpowiedź 
+ */
 app.post('/login', async (req, res) => {
-	const user = await User.findOne({
+	//wyszukiwanie użytkownika po emailu
+  const user = await User.findOne({
 		email: req.body.email,
 	})
-
+  //sprawdza czy użytkownik istnieje i zwraca błąd, jeżeli użytkownik o podanym e-mailu nie istnieje
 	if (!user) {
 		return { status: 'error', error: 'Invalid login' }
 	}
-
+  //sprawdza prawidłowość hasła i zwraca boolean
 	const isPasswordValid = await bcrypt.compare(
 		req.body.password,
 		user.password
 	)
-
+    //w przypdadku podania prawidłowego hasła tworzy token (o nazwie secret123)i przypisuje do niego email i nick
 	if (isPasswordValid) {
 		const token = jwt.sign(
 			{
@@ -67,55 +93,109 @@ app.post('/login', async (req, res) => {
 			},
 			'secret123'
 		)
-
+      //zwraca komikaty w przypadku powodzenia
 		return res.json({ status: 'ok', user: token })
 	} else {
 		return res.json({ status: 'error', user: false })
 	}
 })
 
+/**
+ * pobieranie danuch użytkownika
+ * pobiera token, wyciąga dane (emial i nick) powiązane z nim oraz na podstawie tych danych podaje wydarzenia przypisane do tego użytkownika
+ * @param  req - dane przesyłane z frontendu
+ * @param  res - odpowiedź 
+ */
+
+
 app.get("/userinfo", async (req,res) => {
+    //token
     const token = req.headers['x-access-token']
     try {
+      //pobieranie danych z tokenu użytkownika
         const decoded = jwt.verify(token, 'secret123')
-		const email = decoded.email
+		//email użytkownika
+        const email = decoded.email
+        //wyszukiwanie użytkownika po emailu
         const user = await User.findOne({ email: email })
+        //zwracanie wydarzeń użytkownika z tablicy events oraz komunikatu o pomyślnym wykonaniu
         return res.json({ status: 'ok', events: user.events })
+       
 	} catch (error) {
-		console.log(error)
+    //komunikat w przypadku błędu
 		res.json({ status: 'error', error: 'invalid token' })
 	}
 
 })
 
 
-
+/**
+ * dodawanie wydarzenia
+ * pobiera token, wyciąga dane (emial i nick) z tokenu oraz  tytuł, opis i datę wydarzenie i przypisuje nowy obiekt wydarzenia do użytkownika
+ * @param  req - dane przesyłane z frontendu
+ * @param  res - odpowiedź 
+ */
 
 app.post("/event", async (req,res) => {
+        //pobieranie danych z tokenu użytkownika
   const token = req.headers['x-access-token']  
+  //pobranie tytułu, opisu  i daty wydarzenia
   const {  title, descryption, EventDate } = req.body;
     try {
-        
+        //odczytanie danych z tokena
       const decoded = jwt.verify(token, 'secret123')
     	const email = decoded.email
-
-        User.findOne({email: email}).then(async (data) => {
-            await  User.updateOne({email: email}, { $push: { events: { title, descryption, EventDate}} })
-    
-            res.send({ status: "ok", data: data})
-            console.log("działa")
-        })
-        .catch((error) => {
-            res.send({status: "error", data: error})
-            console.log("niedziała")
-        })
+//dodaje do tablicy evnents przechowującej wydarzenie nowy obiekt o podanym tytule(title), opisie(descryption) i dacie wydarzenia(EventDate)
+        
+             User.updateOne({email: email}, { $push: { events: { title, descryption, EventDate}} })
+             .then((data) => {
+              //wykonyje się jeżeli poprawnie dodano obiekt
+              res.send({ status: "ok"})
+              console.log("działa")
+          })
+          //jeżeli wystąpił błąd
+          .catch((error) => {
+              res.send({status: "error", data: error})
+              console.log("niedziała")
+          })
     } catch (error) {
         
     }
 })
 
+/**
+ * dodawanie wydarzenia
+ * pobiera token, wyciąga dane (emial i nick) z tokenu oraz  tytuł, opis i datę wydarzenie i usuwa wydarzenie o podanych danych
+ * @param  req - dane przesyłane z frontendu
+ * @param  res - odpowiedź 
+ */
+app.post('/deleteevent', async (req, res) => {
+  //token
+  const token = req.headers['x-access-token'] 
+  //dane: tytuł , opis i data wydarzenia. Wszystkie dane są obiektami przechowującej parametr o takim samej nazwie typu String i przesyłane są z frontendu 
+  let {  title, descryption, EventDate } = req.body;
+
+    try {
+       //odczytanie danych z tokena
+      const decoded = jwt.verify(token, 'secret123')
+      //email użytkownika
+    	const email = decoded.email
+        //wyciąga z tablicy events przechowującej obiekty reprezentujące wydarzenia użytkownika o podanym wcześnie
+      User.updateOne({email: email},{$pull: {events:{title: title.title, descryption: descryption.descryption, EventDate: EventDate.EventDate}}}).then((data) => {
+        res.send({ status: "ok", data: data})
+        console.log("działa")
+    })
+    .catch((error) => {
+        res.send({status: "error", data: error})
+        console.log("niedziała")
+    })
+} catch (error) {
+    
+}
+})
 
 
+//stawia serwer na porcie 5000
 app.listen(5000,() => {
     console.log("hello world")
 })

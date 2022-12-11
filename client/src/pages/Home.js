@@ -1,7 +1,6 @@
 
-import car from "../img/car.png"
 import { Link } from "react-router-dom"
-
+//widok strony tytułowej zawierający przycisk do rejestracji oraz logowania
 
 
 
@@ -12,8 +11,6 @@ export function Home() {
         <>
         <div className="flex justify-center items-center h-screen"> 
         <div className="home">
-        <marquee direction="right">
-        </marquee>
         <section>
         <div className=" p-2">
             <h1 className="bg-purple-600 text-white text-3xl rounded-md font-bold inline px-2 box-decoration-slice">Planner</h1>

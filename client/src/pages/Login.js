@@ -1,9 +1,11 @@
 import { useState } from 'react'
-
-function App() {
+//
+//strona zawierająca formularz logowania
+//
+export default function Login() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
-
+	//funkcja pobierająca dane z formularza i przesyłająca je do serwera. Pobiera Stringi: email i hasło. Funkcja wykonuje się przy zatwierdzaniu formularza
 	async function loginUser(event) {
 		event.preventDefault()
 
@@ -17,9 +19,9 @@ function App() {
 				password,
 			}),
 		})
-
+		//
 		const data = await response.json()
-
+		//w przypdaku powodzenia zapisuje token i użytkownika do localstorage i przenosi do kalendarza
 		if (data.user) {
 			localStorage.setItem('token', data.user)
 			localStorage.setItem('user', email)
@@ -32,10 +34,11 @@ function App() {
 
 	return (
 	<div className='flex justify-center items-center h-screen'>
+	  {/* formularz logowania */}
 		<form className='bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4' onSubmit={loginUser}>
 			<div className='mb-4'>
 				<label className='block text-gray-700 text-sm font-bold mb-2'>
-					Nazwa użytkownika:
+					 Adres e-mail:
 				</label>
 				<input className='shadow appearance-none border border-fuchsia-900 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline'
 								value={email}
@@ -65,4 +68,3 @@ function App() {
 	)
 }
 
-export default App

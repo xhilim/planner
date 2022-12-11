@@ -2,8 +2,11 @@ import React, {useContext} from "react"
 import GlobalContext from "../context/GlobalContext"
 import dayjs from "dayjs";
 import { Link } from "react-router-dom"
-export default function  CalendarHeader({nick}) {
+export default function  CalendarHeader() {
+  //nagłówek widoku kalendarza
 
+
+  //funkcje służą do zmiany miesięcy poprzez zmianę indexu 
     const {monthIndex, setMonthIndex}  = useContext(GlobalContext)
     function handlePrevMonth() {
         setMonthIndex(monthIndex - 1);
@@ -14,7 +17,7 @@ export default function  CalendarHeader({nick}) {
         console.log(monthIndex)
       }
 
-
+      //funkcja przywracająca obecny miesiąc
       function handleReset() {
         setMonthIndex(
           monthIndex === dayjs().month()
@@ -29,7 +32,7 @@ export default function  CalendarHeader({nick}) {
 
 
 return(
-        <header className="px-4 py-2 flex items-center  justify-between relative">
+        <header className="px-4 py-2 flex items-center justify-between">
                 <h1 className="text-4xl mr-20  text-purple-900 font-bold ">Planer</h1>
 
             <button className="border-2 rounded py-2 px-6 hover:bg-sky-700 border-purple-900" onClick={handleReset}>Today</button>

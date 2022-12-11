@@ -5,7 +5,7 @@ import App from './App';
 import {BrowserRouter} from "react-router-dom"
 import ContextWrapper from './context/ContextWrapper';
 
-
+//tworzy roota i uruchamia aplikację oraz ContextWrapper
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 
