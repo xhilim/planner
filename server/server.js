@@ -15,7 +15,7 @@ app.use(cors()); //umożliwia połączenie między domenami (łączy frontend i 
 
 app.use(express.json()); //uruchomienie aplikacji - serwera
 
-const mongoUrl =  "mongodb+srv://user:adam123@cluster0.dfi875d.mongodb.net/?retryWrites=true&w=majority" //baza danych
+const mongoUrl =  "YOUR MONGODB DATABASE" //baza danych
 
 //łączenie się  z bazą danuch
 mongoose
